@@ -1,0 +1,155 @@
+{
+  "formatVersion": 2,
+  "metadata": {
+    "namespace": "main",
+    "id": 1
+  },
+  "initialFrameRate": 25,
+  "spawn": {
+    "posX": 900,
+    "posY": 400
+  },
+  "goals": [
+    {
+      "pos": {
+        "posX": 8,
+        "posY": 8
+      },
+      "height": 34,
+      "width": 84,
+      "nextLevelID": 2
+    }
+  ],
+  "obstacles": [
+    {
+      "pos": {
+        "posX": 650,
+        "posY": 350
+      },
+      "height": 100,
+      "width": 150
+    },
+    {
+      "pos": {
+        "posX": 650,
+        "posY": 50
+      },
+      "height": 175,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 525,
+        "posY": 125
+      },
+      "height": 250,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 150,
+        "posY": 50
+      },
+      "height": 250,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 200,
+        "posY": 0
+      },
+      "height": 50,
+      "width": 450
+    },
+    {
+      "pos": {
+        "posX": 275,
+        "posY": 125
+      },
+      "height": 50,
+      "width": 250
+    },
+    {
+      "pos": {
+        "posX": 0,
+        "posY": 400
+      },
+      "height": 50,
+      "width": 175
+    },
+    {
+      "pos": {
+        "posX": 375,
+        "posY": 250
+      },
+      "height": 200,
+      "width": 75
+    },
+    {
+      "pos": {
+        "posX": 200,
+        "posY": 250
+      },
+      "height": 50,
+      "width": 100
+    },
+    {
+      "pos": {
+        "posX": 250,
+        "posY": 300
+      },
+      "height": 100,
+      "width": 50
+    }
+  ],
+  "walls": [
+    {
+      "pos": {
+        "posX": 800,
+        "posY": 100
+      },
+      "height": 400,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 650,
+        "posY": 300
+      },
+      "height": 50,
+      "width": 150
+    },
+    {
+      "pos": {
+        "posX": 650,
+        "posY": 0
+      },
+      "height": 50,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 100,
+        "posY": 0
+      },
+      "height": 350,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 150,
+        "posY": 0
+      },
+      "height": 50,
+      "width": 50
+    },
+    {
+      "pos": {
+        "posX": 150,
+        "posY": 300
+      },
+      "height": 50,
+      "width": 100
+    }
+  ]
+}

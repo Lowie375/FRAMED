@@ -1,0 +1,14 @@
+{
+  "name": "FRAMED",
+  "friends": [
+    {
+      "name": "Gyromina",
+      "duration": 1
+    },
+    {
+      "name": "N",
+      "duration": 3
+    }
+  ],
+  "isHappy": true
+}

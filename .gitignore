@@ -1,0 +1,4 @@
+*.class
+workspace.xml
+/data/test/testWrittenSave.json
+/data/save.json
