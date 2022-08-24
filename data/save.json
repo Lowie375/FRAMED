@@ -1,4 +1,46 @@
 {
+  "col": {
+    "dialogBase": {
+      "r": 44,
+      "b": 44,
+      "g": 40
+    },
+    "goal": {
+      "r": 246,
+      "b": 10,
+      "g": 168
+    },
+    "dialogAcc": {
+      "r": 91,
+      "b": 93,
+      "g": 84
+    },
+    "bg": {
+      "r": 19,
+      "b": 20,
+      "g": 17
+    },
+    "text": {
+      "r": 255,
+      "b": 255,
+      "g": 255
+    },
+    "obstacle": {
+      "r": 234,
+      "b": 75,
+      "g": 17
+    },
+    "wall": {
+      "r": 89,
+      "b": 231,
+      "g": 30
+    },
+    "player": {
+      "r": 0,
+      "b": 99,
+      "g": 150
+    }
+  },
   "currentLevelID": 0,
   "currentNamespace": "main",
   "formatVersion": 3
