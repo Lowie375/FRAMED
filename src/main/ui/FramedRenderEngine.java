@@ -89,9 +89,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
     public void stateChanged(ChangeEvent e) {
         ColorSelectionModel colChooser = (ColorSelectionModel) e.getSource();
         colChooser.getSelectedColor();
-        if (colChooser != null) {
-            this.tempColManager.setColor(ColorManager.KEYS[currentColIndex], colChooser.getSelectedColor());
-        }
+        this.tempColManager.setColor(ColorManager.KEYS[currentColIndex], colChooser.getSelectedColor());
     }
 
     /**
@@ -236,7 +234,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
         tabMenu.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         JPanel themeTab = createThemeTab();
-        JPanel advancedTab = createAdvancedTab(); // currently unused
+        // JPanel advancedTab = createAdvancedTab(); // currently unused
         JPanel analysisTab = createAnalysisTab();
 
         tabMenu.addTab("Theme", themeTab);
@@ -621,9 +619,9 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
         float goalCount = this.framed.getLevel().getGoals().size();
         float max = Math.max(obstCount, Math.max(wallCount, goalCount));
 
-        buildBreakdownBar(graph, obstCount, max, ColorManager.OBST, 0);
-        buildBreakdownBar(graph, wallCount, max, ColorManager.WALL, 1);
-        buildBreakdownBar(graph, goalCount, max, ColorManager.GOAL, 2);
+        buildBreakdownBar(graph, obstCount, max, ColorManager.OBST);
+        buildBreakdownBar(graph, wallCount, max, ColorManager.WALL);
+        buildBreakdownBar(graph, goalCount, max, ColorManager.GOAL);
     }
 
     /**
@@ -633,11 +631,10 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      * @param elemCount element count of the bar
      * @param max highest element count of all the bars
      * @param col bar colour
-     * @param posX position of the par within the graph
      * @deprecated due to poor functionality
      * @see #createBreakdownGraph()
      */
-    private void buildBreakdownBar(JPanel graph, float elemCount, float max, int col, int posX) {
+    private void buildBreakdownBar(JPanel graph, float elemCount, float max, int col) {
         JPanel bar = new JPanel();
         bar.setBackground(this.framed.getColManager().getColor(ColorManager.KEYS[col]));
         bar.setMinimumSize(new Dimension(50, (int) (elemCount / max * GRAPH_MAX_HEIGHT)));
