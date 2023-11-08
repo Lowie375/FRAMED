@@ -10,11 +10,11 @@ import java.awt.Color;
  */
 public class Player {
     public static final int SIZE = 10;
-    private Position pos;
+    private final Position pos;
     private Color col;
     private double dx;
     private double dy;
-    private MovementDirTracker movementDir;
+    private final MovementDirTracker movementDir;
 
     /**
      * Creates a new player at position with the specified hex colour and no x-velocity or y-velocity

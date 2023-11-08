@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FRAMED:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FRAMED_jar</output-path>
+    <root id="archive" name="FRAMED.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="FRAMED" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-20210307.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

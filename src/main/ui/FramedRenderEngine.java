@@ -31,8 +31,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
 
     public static final int GRAPH_MAX_HEIGHT = 300;
 
-    private FramedGame framed;
-    private ColorManager tempColManager;
+    private final FramedGame framed;
+    private final ColorManager tempColManager;
     private int currentColIndex;
 
     private JPanel pauseMenu;

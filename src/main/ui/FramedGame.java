@@ -25,20 +25,17 @@ import static java.awt.event.KeyEvent.*;
 
 /**
  * Represents an instance of FRAMED
+ *
  * @see <a href="https://github.com/mkotb/SnakeConsole">https://github.com/mkotb/SnakeConsole (partially adapted from ui.TerminalGame)</a>
  */
 public class FramedGame extends JFrame implements ActionListener {
-    public static final float CLOCK_FRAME_RATE = 30;
-    public static final int SCREEN_WIDTH = 968; // equates to 950 usable pixels
-    public static final int SCREEN_HEIGHT = 519; // equates to 450 usable pixels
+    public static final double NANO = Math.pow(10, 9);
+    public static final double NANO_TO_MILLI = Math.pow(10, -6);
+    public static final double CLOCK_FRAME_RATE = 30;
     public static final int STATUS_ROW_HEIGHT = 60;
-
-    public static final int PAUSED = 1;
-    public static final int ACTIVE = 0;
-    public static final int EXIT = 2;
-    public static final int TRANSITION = 3;
-    public static final int INVULNERABLE = 4;
-    public static final int SETTINGS = 5;
+    public static final int SCREEN_SPACER = 9;
+    public static final int SCREEN_WIDTH = 950 + 2 * SCREEN_SPACER; // equates to 950 usable pixels
+    public static final int SCREEN_HEIGHT = 450 + STATUS_ROW_HEIGHT + SCREEN_SPACER; // equates to 450 usable pixels
 
     public static final int NO_MOVE_CHANGE = 0;
     public static final int X_MOVE_CHANGE = 1;
@@ -59,7 +56,9 @@ public class FramedGame extends JFrame implements ActionListener {
     private float graphicalFrameRate;
     private boolean[] graphicalUpdates;
     private boolean newSave;
-    private int status;
+    private GameState status;
+    private long waitTime;
+    private long startTime;
 
     /**
      * Creates a new terminal instance of FRAMED from the FRAMED save file
@@ -75,7 +74,7 @@ public class FramedGame extends JFrame implements ActionListener {
         // temporary, will likely allow resizing later
         setResizable(false);
 
-        Dimension screenSize =  Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setLocation((int) (screenSize.getWidth() - getWidth()) / 2, (int) (screenSize.getHeight() - getHeight()) / 2);
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -109,9 +108,8 @@ public class FramedGame extends JFrame implements ActionListener {
         level = loadLevel(save.getString("currentNamespace"), save.getInt("currentLevelID"));
         player = new Player(new Position(0, 0), JsonParser.jsonToColor(
                 colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])));
-
         graphicalFrameRate = level.getInitialFrameRate();
-        fdt = new FrameDelayTracker((long) (1000 / CLOCK_FRAME_RATE), (long) (1000 / graphicalFrameRate));
+        fdt = new FrameDelayTracker((long) (NANO / CLOCK_FRAME_RATE), (long) (NANO / graphicalFrameRate));
 
         colManager = new ColorManager(
                 JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])),
@@ -124,26 +122,28 @@ public class FramedGame extends JFrame implements ActionListener {
                 JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
         framedRenderer = new FramedRenderEngine(this);
         graphicalUpdates = new boolean[]{true, true, false};
+        waitTime = 0;
 
         newSave = this.level.getID() == 0 && this.level.getNamespace().equals("main");
 
-        status = INVULNERABLE;
+        status = GameState.INVULNERABLE;
         framedRenderer.showLoadPopup();
-        status = ACTIVE;
+        status = GameState.ACTIVE;
     }
 
     /**
      * Starts an instance of FRAMED
      *
-     * @throws IOException if an I/O error occurs
+     * @throws IOException          if an I/O error occurs
      * @throws InterruptedException if the thread is interrupted while sleeping
      */
     public void startGame() throws IOException, InterruptedException {
+        startTime = System.nanoTime();
         updateLevelColours(this.level);
         framedRenderer.updateUIColours();
         level.startLevel(this.player);
 
-        while (this.status != EXIT) {
+        while (this.status != GameState.EXIT) {
             tickLoop();
         }
         System.exit(0);
@@ -153,7 +153,7 @@ public class FramedGame extends JFrame implements ActionListener {
      * Loads the level with the given namespace and level ID from the FRAMED save files
      *
      * @param namespace the namespace of the level to be loaded
-     * @param id the numerical ID of the level to be loaded
+     * @param id        the numerical ID of the level to be loaded
      * @return the loaded level
      * @throws IOException if an I/O error occurs
      * @see #loadLevel(String)
@@ -181,19 +181,20 @@ public class FramedGame extends JFrame implements ActionListener {
      * Determines what type of tick should be processed based on the game's current frame rate and state,
      * then processes it
      *
-     * @throws IOException if an I/O error occurs
+     * @throws IOException          if an I/O error occurs
      * @throws InterruptedException if the thread is interrupted while sleeping
      */
     private void tickLoop() throws IOException, InterruptedException {
-        if (this.status == PAUSED || this.status == SETTINGS) {
+        if (this.status == GameState.PAUSED || this.status == GameState.SETTINGS) {
             // wait for unpause action
             pausedTick();
-        } else if (this.status == TRANSITION) {
-            // complete level transition
+        } else if (this.status == GameState.TRANSITION) {
+            // TODO: complete level transition
             //renderTransition();
             restartLevel();
-            Thread.sleep((long) (1000 / CLOCK_FRAME_RATE));
-            this.status = ACTIVE;
+            Thread.sleep((long) (NANO * NANO_TO_MILLI / CLOCK_FRAME_RATE));
+            resetStartTime();
+            this.status = GameState.ACTIVE;
         } else {
             // handle a generic tick
             genericTick();
@@ -203,37 +204,52 @@ public class FramedGame extends JFrame implements ActionListener {
     /**
      * Handles a tick while in a paused state: check for unpause actions and re-render if in the settings menu
      *
-     * @throws IOException if an I/O error occurs
+     * @throws IOException          if an I/O error occurs
      * @throws InterruptedException if the thread is interrupted while sleeping
      */
     private void pausedTick() throws IOException, InterruptedException {
+        resetStartTime();
         repaint();
         handleKeys();
-        Thread.sleep((long) (1000 / CLOCK_FRAME_RATE));
+        Thread.sleep((long) (NANO * NANO_TO_MILLI / CLOCK_FRAME_RATE));
     }
 
     /**
      * Handles a generic tick (clock/graphical/both) depending on the game's current frame rate
      *
-     * @throws IOException if an I/O error occurs
+     * @throws IOException          if an I/O error occurs
      * @throws InterruptedException if the thread is interrupted while sleeping
      */
     private void genericTick() throws IOException, InterruptedException {
+        if (startTime == -1) {
+            startTime = System.nanoTime();
+        }
+
         // check for clock tick
         if (this.fdt.getClockFrameDelay() == 0) {
             handleClockTick();
-            this.fdt.setClockFrameDelay((long) (1000 / CLOCK_FRAME_RATE));
+            this.fdt.setClockFrameDelay((long) (NANO / CLOCK_FRAME_RATE));
         }
         // check for graphical tick
         if (this.fdt.getGraphicalFrameDelay() == 0) {
             handleGraphicalTick();
-            this.fdt.setGraphicalFrameDelay((long) (1000 / graphicalFrameRate));
+            this.fdt.setGraphicalFrameDelay((long) (NANO / graphicalFrameRate));
         }
+
         // repeat the cycle + re-tick at next appropriate time
-        Thread.sleep(this.fdt.getMinFrameDelay());
+        long timeUntilNextTick = this.fdt.getMinFrameDelay();
+        waitTime += timeUntilNextTick;
+        long elapsedTime = System.nanoTime() - startTime;
+
+        if (waitTime - elapsedTime >= 0) {
+            Thread.sleep((long) ((waitTime - elapsedTime) * NANO_TO_MILLI));
+            waitTime = 0;
+            startTime = System.nanoTime();
+        }
+
         graphicalUpdates[0] = false;
         graphicalUpdates[1] = false;
-        this.fdt.reduceFrameDelays(fdt.getMinFrameDelay());
+        this.fdt.reduceFrameDelays(timeUntilNextTick);
     }
 
     /**
@@ -258,13 +274,13 @@ public class FramedGame extends JFrame implements ActionListener {
      * @throws IOException if an I/O error occurs
      */
     private void handleGraphicalTick() throws IOException {
-        if (this.status != INVULNERABLE) {
+        if (this.status != GameState.INVULNERABLE) {
             CollisionEvent collisionEvent = this.level.handlePlayerCollisions(this.player);
             if (collisionEvent.getStatus() != 0) {
                 handlePlayerCollisionEvent(collisionEvent);
             }
         }
-        if (this.status != TRANSITION) {
+        if (this.status != GameState.TRANSITION) {
             graphicalUpdates[0] = true;
             repaint();
         }
@@ -325,8 +341,8 @@ public class FramedGame extends JFrame implements ActionListener {
     /**
      * Handles one "typed" user key input, triggering the appropriate game action
      *
-     * @param ke key event emitted by the key being typed
-     * @param key character typed
+     * @param ke      key event emitted by the key being typed
+     * @param key     character typed
      * @param allKeys set of all keys currently being pressed
      */
     private void handleTypedKey(KeyEvent ke, Character key, Set<Integer> allKeys) throws IOException {
@@ -339,13 +355,13 @@ public class FramedGame extends JFrame implements ActionListener {
             }
         }
         // non-TRANSITION combinations
-        if (this.status != TRANSITION) {
-            if ((key == 'p' || key == '7') && this.status != SETTINGS) {
+        if (this.status != GameState.TRANSITION) {
+            if ((allKeys.contains(VK_ESCAPE) || key == 'p' || key == '7') && this.status != GameState.SETTINGS) {
                 togglePause();
             }
         }
         // ACTIVE combinations
-        if (this.status == ACTIVE) {
+        if (this.status == GameState.ACTIVE) {
             if (key == 'r' || key == '9') {
                 restartLevel();
             } else if (key == 'e' || key == '1') {
@@ -359,7 +375,7 @@ public class FramedGame extends JFrame implements ActionListener {
     /**
      * Handles one "pressed" user key input, triggering the appropriate game actions
      *
-     * @param keyCode key code of the pressed key
+     * @param keyCode    key code of the pressed key
      * @param moveChange flag representing all movement changes handled this tick
      * @return constant representing the movement change handled
      */
@@ -398,7 +414,7 @@ public class FramedGame extends JFrame implements ActionListener {
         if (collisionEvent.getStatus() == Level.RESET) {
             restartLevel();
         } else if (collisionEvent.getStatus() == Level.GOAL_REACHED) {
-            this.status = TRANSITION;
+            this.status = GameState.TRANSITION;
             graphicalUpdates[0] = true;
             repaint();
             loadNextLevel(collisionEvent.getExtraData());
@@ -490,6 +506,7 @@ public class FramedGame extends JFrame implements ActionListener {
         addElementsToElementString(elementString, "Goals:", this.level.getGoals());
 
         framedRenderer.setAnalysisText(String.valueOf(elementString));
+        // TODO: implement graph
         //framedRenderer.createBreakdownGraph();
         //repaint();
     }
@@ -498,8 +515,8 @@ public class FramedGame extends JFrame implements ActionListener {
      * Adds the given header and all the elements in the given list to the given string builder
      *
      * @param elementString string builder
-     * @param headerText header for the list of elements
-     * @param elements list of level elements
+     * @param headerText    header for the list of elements
+     * @param elements      list of level elements
      */
     private void addElementsToElementString(StringBuilder elementString, String headerText,
                                             List<? extends LevelElement> elements) {
@@ -549,8 +566,8 @@ public class FramedGame extends JFrame implements ActionListener {
      * Adds the given element's area and usage percent to the given string builder
      *
      * @param elementString string builder
-     * @param elementName name of the element
-     * @param elementArea level area taken up by the given element
+     * @param elementName   name of the element
+     * @param elementArea   level area taken up by the given element
      * @param totalUsedArea level area taken up by all level elements
      */
     private void addAreaToElementString(StringBuilder elementString, String elementName,
@@ -619,9 +636,9 @@ public class FramedGame extends JFrame implements ActionListener {
      * Closes the FRAMED instance
      */
     private void closeGame() {
-        this.status = INVULNERABLE;
+        this.status = GameState.INVULNERABLE;
         this.framedRenderer.showExitPopup();
-        this.status = EXIT;
+        this.status = GameState.EXIT;
     }
 
     /**
@@ -682,7 +699,7 @@ public class FramedGame extends JFrame implements ActionListener {
      * Toggles the pause state of the game, stopping/starting the tick cycle
      */
     private void togglePause() {
-        if (this.status == PAUSED) {
+        if (this.status == GameState.PAUSED) {
             unpause();
         } else {
             pause();
@@ -693,7 +710,7 @@ public class FramedGame extends JFrame implements ActionListener {
      * Changes the game's state to PAUSED and temporarily stops the tick cycle
      */
     private void pause() {
-        this.status = PAUSED;
+        this.status = GameState.PAUSED;
         framedRenderer.openPauseMenu();
     }
 
@@ -701,7 +718,7 @@ public class FramedGame extends JFrame implements ActionListener {
      * Changes the game's state to ACTIVE and resumes the tick cycle
      */
     private void unpause() {
-        this.status = ACTIVE;
+        this.status = GameState.ACTIVE;
         framedRenderer.closePauseMenu();
         this.requestFocus();
         graphicalUpdates[1] = true;
@@ -713,7 +730,7 @@ public class FramedGame extends JFrame implements ActionListener {
      * Pauses the game and opens the settings menu + changes the game's state to SETTINGS
      */
     private void openSettings() {
-        this.status = SETTINGS;
+        this.status = GameState.SETTINGS;
         graphicalUpdates[0] = false;
         graphicalUpdates[2] = false;
         framedRenderer.openSettingsMenu();
@@ -725,11 +742,11 @@ public class FramedGame extends JFrame implements ActionListener {
     private void closeSettings() {
         framedRenderer.closeSettingsMenu();
         if (framedRenderer.pauseMenuIsOpen()) {
-            this.status = PAUSED;
+            this.status = GameState.PAUSED;
             graphicalUpdates[0] = true;
             graphicalUpdates[2] = true;
         } else {
-            this.status = ACTIVE;
+            this.status = GameState.ACTIVE;
             this.requestFocus();
             graphicalUpdates[1] = true;
             repaint();
@@ -737,10 +754,17 @@ public class FramedGame extends JFrame implements ActionListener {
     }
 
     /**
+     * Resets the game's ticker
+     */
+    private void resetStartTime() {
+        startTime = -1;
+    }
+
+    /**
      * Sets the given graphical update boolean to the specified state
      *
      * @param update index of the graphical update boolean to change
-     * @param state new state
+     * @param state  new state
      */
     public void setGraphicalUpdate(int update, boolean state) {
         this.graphicalUpdates[update] = state;
@@ -770,7 +794,7 @@ public class FramedGame extends JFrame implements ActionListener {
     /**
      * @return the FRAMED game's current status
      */
-    public int getStatus() {
+    public GameState getStatus() {
         return this.status;
     }
 

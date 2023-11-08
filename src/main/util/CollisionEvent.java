@@ -4,8 +4,8 @@ package util;
  * Represents a player collision event with a status and (optional) extra data
  */
 public class CollisionEvent {
-    private int status;
-    private Object extraData;
+    private final int status;
+    private final Object extraData;
 
     /**
      * Creates a collision event with the given status and extra data

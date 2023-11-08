@@ -11,7 +11,8 @@ import org.json.JSONObject;
 import java.awt.*;
 import java.util.ArrayList;
 
-/** (static)
+/**
+ * (static)
  * Represents a static utility class for parsing JSON objects into other formats
  */
 public class JsonParser {
@@ -42,7 +43,7 @@ public class JsonParser {
      * Parses the given list of JSON obstacles and adds it to the given level
      *
      * @param obstacles JSON array of obstacles
-     * @param level level to add parsed obstacles to
+     * @param level     level to add parsed obstacles to
      */
     private static void parseObstacles(JSONArray obstacles, Level level) {
         for (int i = 0; i < obstacles.length(); i++) {
