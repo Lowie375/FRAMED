@@ -3,7 +3,9 @@ package ui;
 import elem.LevelElement;
 import model.Level;
 import model.Player;
+import org.json.JSONObject;
 import util.ColorManager;
+import util.JsonParser;
 import util.Position;
 
 import javax.swing.*;
@@ -32,6 +34,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
     public static final int GRAPH_MAX_HEIGHT = 300;
 
     private final FramedGame framed;
+    private final ColorManager colManager;
     private final ColorManager tempColManager;
     private int currentColIndex;
 
@@ -43,17 +46,26 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      *
      * @param framed active FRAMED instance
      */
-    public FramedRenderEngine(FramedGame framed) {
+    public FramedRenderEngine(FramedGame framed, JSONObject colours) {
         this.framed = framed;
+        this.colManager = new ColorManager(
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.OBST])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.WALL])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.GOAL])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.BG])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.TEXT])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_BASE])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
         this.tempColManager = new ColorManager(
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.PLAYER]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.OBST]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.WALL]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.GOAL]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.BG]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]),
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.OBST])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.WALL])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.GOAL])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.BG])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.TEXT])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_BASE])),
+                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
         this.currentColIndex = 0;
         initializePausePanel();
         initializeSettingsPanel();
@@ -103,9 +115,9 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
         pauseMenu.setVisible(false);
         pauseMenu.setBounds((framed.getWidth() - 450) / 2 - 9,
                 (framed.getHeight() - 100 - FramedGame.STATUS_ROW_HEIGHT / 2) / 2, 450, 100);
-        pauseMenu.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        pauseMenu.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
         pauseMenu.setBorder(BorderFactory.createLineBorder(
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
+                colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
 
         pauseMenu.add(Box.createVerticalGlue());
         pauseMenu.add(createPauseLabel());
@@ -124,11 +136,11 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
     private JPanel createPauseLabel() {
         JPanel label = new JPanel();
         label.setLayout(new BoxLayout(label, BoxLayout.X_AXIS));
-        label.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        label.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         JLabel pauseLabel = new JLabel("[PAUSED]");
         pauseLabel.setFont(new Font("Monospaced", Font.BOLD, 24));
-        pauseLabel.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        pauseLabel.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         label.add(Box.createHorizontalGlue());
         label.add(pauseLabel);
@@ -144,7 +156,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel createPauseButtonRow() {
         JPanel buttonRow = new JPanel();
-        buttonRow.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        buttonRow.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         JButton unpause = buildButton("UNPAUSE", "pause.unpause", VK_P);
         JButton restart = buildButton("RESTART", "pause.restart", VK_R);
@@ -169,8 +181,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JButton buildButton(String name, String actionEmitted, Integer mnemonicKey) {
         JButton button = new JButton(name);
-        button.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
-        button.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        button.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
+        button.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         if (mnemonicKey != null) {
             button.setMnemonic(mnemonicKey);
@@ -191,9 +203,9 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
         settingsMenu.setVisible(false);
         settingsMenu.setBounds((framed.getWidth() - 800) / 2 - 9,
                 (framed.getHeight() - 375 - FramedGame.STATUS_ROW_HEIGHT / 2) / 2, 800, 375);
-        settingsMenu.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        settingsMenu.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
         settingsMenu.setBorder(BorderFactory.createLineBorder(
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
+                colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
 
         settingsMenu.add(createSettingsLabel(), BorderLayout.PAGE_START);
         settingsMenu.add(createTabMenu(), BorderLayout.CENTER);
@@ -209,11 +221,11 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel createSettingsLabel() {
         JPanel label = new JPanel(new BorderLayout());
-        label.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        label.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         JLabel settingsLabel = new JLabel("SETTINGS", JLabel.CENTER);
         settingsLabel.setFont(new Font("Monospaced", Font.BOLD, 20));
-        settingsLabel.setForeground(framed.getColManager().getColor("text"));
+        settingsLabel.setForeground(colManager.getColor("text"));
 
         JButton exit = buildButton("X", "settings.exit", VK_X);
 
@@ -230,8 +242,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JTabbedPane createTabMenu() {
         JTabbedPane tabMenu = new JTabbedPane();
-        tabMenu.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        tabMenu.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        tabMenu.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        tabMenu.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         JPanel themeTab = createThemeTab();
         // JPanel advancedTab = createAdvancedTab(); // currently unused
@@ -250,7 +262,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel createThemeTab() {
         JPanel themeTab = new JPanel(new BorderLayout());
-        themeTab.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        themeTab.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         themeTab.add(buildThemeSelectPanel(), BorderLayout.LINE_START);
         themeTab.add(buildColorChooserPanel(), BorderLayout.CENTER);
@@ -265,14 +277,14 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JColorChooser buildColorChooserPanel() {
         JColorChooser themeCol = new JColorChooser();
-        themeCol.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        themeCol.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         AbstractColorChooserPanel[] colPanels = themeCol.getChooserPanels();
         themeCol.removeChooserPanel(colPanels[4]);
         themeCol.removeChooserPanel(colPanels[0]);
         for (AbstractColorChooserPanel colPanel : colPanels) {
-            colPanel.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-            colPanel.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+            colPanel.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+            colPanel.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
         }
         themeCol.getSelectionModel().addChangeListener(this);
         themeCol.setColor(tempColManager.getColor(ColorManager.KEYS[currentColIndex]));
@@ -287,7 +299,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel buildThemeSelectPanel() {
         JPanel themeSelect = new JPanel(new BorderLayout());
-        themeSelect.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        themeSelect.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
 
         JComboBox<String> colorToEdit = new JComboBox<>(ColorManager.ELEMENTS_WITH_COL);
         colorToEdit.setSelectedIndex(0);
@@ -307,8 +319,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel buildThemeSelectButtonColumn() {
         JPanel buttonColumn = new JPanel(new GridLayout(0, 1));
-        buttonColumn.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        buttonColumn.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        buttonColumn.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        buttonColumn.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         buttonColumn.add(buildButton("RESET TO CURRENT", "settings.theme.reset", null));
         buttonColumn.add(buildButton("RESET TO DEFAULT", "settings.theme.default", null));
@@ -324,8 +336,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel createAdvancedTab() {
         JPanel advancedTab = new JPanel();
-        advancedTab.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        advancedTab.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        advancedTab.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        advancedTab.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         return advancedTab;
     }
@@ -337,8 +349,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private JPanel createAnalysisTab() {
         JPanel analysisTab = new JPanel(new BorderLayout());
-        analysisTab.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        analysisTab.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        analysisTab.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        analysisTab.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
 
         JPanel buttonCol = new JPanel(new GridLayout(0, 1));
         buttonCol.add(buildButton("LEVEL BREAKDOWN", "settings.analyze.level", null));
@@ -346,8 +358,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
 
         JScrollPane scrollingText = buildScrollPane();
         JPanel analysisGraphic = new JPanel();
-        analysisGraphic.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        analysisGraphic.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        analysisGraphic.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        analysisGraphic.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
         analysisGraphic.setMinimumSize(new Dimension(90, GRAPH_MAX_HEIGHT));
 
         analysisTab.add(buttonCol, BorderLayout.LINE_START);
@@ -389,8 +401,8 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
     private JScrollPane buildScrollPane() {
         JTextArea elementList = new JTextArea("Use the sidebar buttons to analyze the current level!");
         elementList.setEditable(false);
-        elementList.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
-        elementList.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        elementList.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        elementList.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
         elementList.setLineWrap(true);
         elementList.setWrapStyleWord(true);
         elementList.setFont(new Font("SansSerif", Font.PLAIN, 16));
@@ -408,7 +420,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      * @param g FRAMED graphics object
      */
     public void clear(Graphics g) {
-        g.setColor(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.BG]));
+        g.setColor(colManager.getColor(ColorManager.KEYS[ColorManager.BG]));
         g.fillRect(0, FramedGame.STATUS_ROW_HEIGHT, FramedGame.SCREEN_WIDTH, FramedGame.SCREEN_HEIGHT);
     }
 
@@ -446,13 +458,13 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     public void renderStatusRow(Graphics g) {
         // clears status row
-        g.setColor(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+        g.setColor(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
         g.fillRect(0, 0, FramedGame.SCREEN_WIDTH, FramedGame.STATUS_ROW_HEIGHT - 1);
 
         // fills row with status message
-        g.setColor(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
+        g.setColor(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
         g.fillRect(0, FramedGame.STATUS_ROW_HEIGHT - 1, FramedGame.SCREEN_WIDTH, 1);
-        g.setColor(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        g.setColor(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
         g.setFont(new Font("Monospaced", Font.BOLD, 16));
         g.drawString(framed.getCurrentLevelDisplay() + " @ " + framed.getGraphicalFrameRate() + " FPS", 13, 53);
     }
@@ -577,7 +589,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      * Reverts the selected colour to its current saved state
      */
     public void revertSelectedColToCurrent() {
-        Color savedCol = this.framed.getColManager().getColor(ColorManager.KEYS[currentColIndex]);
+        Color savedCol = this.colManager.getColor(ColorManager.KEYS[currentColIndex]);
         this.tempColManager.setColor(ColorManager.KEYS[currentColIndex], savedCol);
         getThemeColorChooser().setColor(savedCol);
     }
@@ -636,7 +648,7 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     private void buildBreakdownBar(JPanel graph, float elemCount, float max, int col) {
         JPanel bar = new JPanel();
-        bar.setBackground(this.framed.getColManager().getColor(ColorManager.KEYS[col]));
+        bar.setBackground(this.colManager.getColor(ColorManager.KEYS[col]));
         bar.setMinimumSize(new Dimension(50, (int) (elemCount / max * GRAPH_MAX_HEIGHT)));
         bar.setMaximumSize(new Dimension(50, (int) (elemCount / max * GRAPH_MAX_HEIGHT)));
         bar.setAlignmentY(BOTTOM_ALIGNMENT);
@@ -676,19 +688,29 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
     }
 
     /**
+     * Updates the colour manager with the new selected colours + updated the colours of GUI components
+     */
+    public void updateColours() {
+        for (String key : ColorManager.KEYS) {
+            this.colManager.setColor(key, tempColManager.getColor(key));
+        }
+        updateUIColours();
+    }
+
+    /**
      * Updates the colours of the FRAMED GUI
      */
-    public void updateUIColours() {
+    private void updateUIColours() {
         updateComponentColour(pauseMenu);
         pauseMenu.setBorder(BorderFactory.createLineBorder(
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
+                colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
         for (Component c : getAllComponentsInTree(pauseMenu)) {
             updateComponentColour(c);
         }
 
         updateComponentColour(settingsMenu);
         settingsMenu.setBorder(BorderFactory.createLineBorder(
-                framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
+                colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
         for (Component c : getAllComponentsInTree(settingsMenu)) {
             updateComponentColour(c);
         }
@@ -722,13 +744,13 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
         switch (c.getClass().getSimpleName()) {
             case "JButton":
             case "JComboBox":
-                c.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
+                c.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_ACC]));
                 break;
             default:
-                c.setBackground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
+                c.setBackground(colManager.getColor(ColorManager.KEYS[ColorManager.DIALOG_BASE]));
                 break;
         }
-        c.setForeground(framed.getColManager().getColor(ColorManager.KEYS[ColorManager.TEXT]));
+        c.setForeground(colManager.getColor(ColorManager.KEYS[ColorManager.TEXT]));
     }
 
     /**
@@ -757,6 +779,13 @@ public class FramedRenderEngine implements ActionListener, ChangeListener {
      */
     public boolean settingsMenuIsVisible() {
         return settingsMenu.isVisible();
+    }
+
+    /**
+     * @return the renderer's colour manager
+     */
+    public ColorManager getColManager() {
+        return this.colManager;
     }
 
     /**

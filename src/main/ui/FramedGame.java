@@ -49,7 +49,6 @@ public class FramedGame extends JFrame implements ActionListener {
     private Level level;
     private Player player;
     private FramedRenderEngine framedRenderer;
-    private ColorManager colManager;
     private FrameDelayTracker fdt;
 
     private String currentLevelDisplay;
@@ -69,9 +68,9 @@ public class FramedGame extends JFrame implements ActionListener {
         super("FRAMED");
         setSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         setLayout(null);
-        //setMinimumSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 
         // temporary, will likely allow resizing later
+        //setMinimumSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         setResizable(false);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -102,25 +101,16 @@ public class FramedGame extends JFrame implements ActionListener {
      * @throws IOException if an I/O error occurs
      */
     private void initializeGame() throws IOException {
-        // get current level information from save file
         JSONObject save = JsonReader.readFile("./data/save.json");
         JSONObject colours = save.getJSONObject("col");
+
         level = loadLevel(save.getString("currentNamespace"), save.getInt("currentLevelID"));
         player = new Player(new Position(0, 0), JsonParser.jsonToColor(
                 colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])));
         graphicalFrameRate = level.getInitialFrameRate();
         fdt = new FrameDelayTracker((long) (NANO / CLOCK_FRAME_RATE), (long) (NANO / graphicalFrameRate));
 
-        colManager = new ColorManager(
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.PLAYER])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.OBST])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.WALL])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.GOAL])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.BG])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.TEXT])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_BASE])),
-                JsonParser.jsonToColor(colours.getJSONObject(ColorManager.KEYS[ColorManager.DIALOG_ACC])));
-        framedRenderer = new FramedRenderEngine(this);
+        framedRenderer = new FramedRenderEngine(this, colours);
         graphicalUpdates = new boolean[]{true, true, false};
         waitTime = 0;
 
@@ -140,7 +130,7 @@ public class FramedGame extends JFrame implements ActionListener {
     public void startGame() throws IOException, InterruptedException {
         startTime = System.nanoTime();
         updateLevelColours(this.level);
-        framedRenderer.updateUIColours();
+        framedRenderer.updateColours();
         level.startLevel(this.player);
 
         while (this.status != GameState.EXIT) {
@@ -297,12 +287,12 @@ public class FramedGame extends JFrame implements ActionListener {
         try {
             nextLevelID = (int) nextLevelObj;
         } catch (NullPointerException | ClassCastException e) {
-            throw new IOException();
+            throw new IOException("Failed to get next level ID");
         }
 
         JSONObject currentSave = JsonReader.readFile("./data/save.json");
         JsonWriter.writeToSave("./data/save.json", nextLevelID, currentSave.getString("currentNamespace"),
-                this.colManager);
+                this.framedRenderer.getColManager());
         this.level = loadLevel(currentSave.getString("currentNamespace"), nextLevelID);
         updateLevelColours(this.level);
     }
@@ -581,24 +571,14 @@ public class FramedGame extends JFrame implements ActionListener {
      * Updates the colour manager with the new selected colours + updates the colours of all FRAMED components
      */
     private void updateColours() {
-        // update colour manager
-        ColorManager newColours = this.framedRenderer.getTempColManager();
-        for (String key : ColorManager.KEYS) {
-            this.colManager.setColor(key, newColours.getColor(key));
-        }
-
-        // update player
-        this.player.setCol(this.colManager.getColor(ColorManager.KEYS[ColorManager.PLAYER]));
-        // update level
+        this.framedRenderer.updateColours();
+        this.player.setCol(this.framedRenderer.getColManager().getColor(ColorManager.KEYS[ColorManager.PLAYER]));
         updateLevelColours(this.level);
-        // update
-        framedRenderer.updateUIColours();
 
-        // update save
         try {
             JSONObject currentSave = JsonReader.readFile("./data/save.json");
             JsonWriter.writeToSave("./data/save.json", currentSave.getInt("currentLevelID"),
-                    currentSave.getString("currentNamespace"), this.colManager);
+                    currentSave.getString("currentNamespace"), this.framedRenderer.getColManager());
         } catch (IOException e) {
             // uh oh, sorry!
             System.out.println("Save to file failed! Please try again later.");
@@ -611,14 +591,18 @@ public class FramedGame extends JFrame implements ActionListener {
      * @param level level to update
      */
     private void updateLevelColours(Level level) {
+        Color obstacleCol = this.framedRenderer.getColManager().getColor(ColorManager.KEYS[ColorManager.OBST]);
+        Color wallCol = this.framedRenderer.getColManager().getColor(ColorManager.KEYS[ColorManager.WALL]);
+        Color goalCol = this.framedRenderer.getColManager().getColor(ColorManager.KEYS[ColorManager.GOAL]);
+
         for (Obstacle obst : level.getObstacles()) {
-            obst.setElementCol(this.colManager.getColor(ColorManager.KEYS[ColorManager.OBST]));
+            obst.setElementCol(obstacleCol);
         }
         for (Wall wall : level.getWalls()) {
-            wall.setElementCol(this.colManager.getColor(ColorManager.KEYS[ColorManager.WALL]));
+            wall.setElementCol(wallCol);
         }
         for (Goal goal : level.getGoals()) {
-            goal.setElementCol(this.colManager.getColor(ColorManager.KEYS[ColorManager.GOAL]));
+            goal.setElementCol(goalCol);
         }
     }
 
@@ -810,13 +794,6 @@ public class FramedGame extends JFrame implements ActionListener {
      */
     public FrameDelayTracker getFdt() {
         return this.fdt;
-    }
-
-    /**
-     * @return the FRAMED game's colour manager
-     */
-    public ColorManager getColManager() {
-        return this.colManager;
     }
 
     /**
