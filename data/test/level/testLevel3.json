@@ -1,0 +1,59 @@
+{
+  "formatVersion": 2,
+  "metadata": {
+    "namespace": "test",
+    "id": 375
+  },
+  "initialFrameRate": 1.8,
+  "spawn": {
+    "posX": 88,
+    "posY": 45
+  },
+  "goals": [
+    {
+      "pos": {
+        "posX": 99,
+        "posY": 55
+      },
+      "width": 5,
+      "height": 88,
+      "nextLevelID": 16
+    }
+  ],
+  "obstacles": [
+    {
+      "pos": {
+        "posX": 0,
+        "posY": 15
+      },
+      "width": 9,
+      "height": 9
+    }
+  ],
+  "walls": [
+    {
+      "pos": {
+        "posX": 8,
+        "posY": 7
+      },
+      "width": 6,
+      "height": 5
+    },
+    {
+      "pos": {
+        "posX": 3,
+        "posY": 4
+      },
+      "width": 3,
+      "height": 4
+    },
+    {
+      "pos": {
+        "posX": 11,
+        "posY": 13
+      },
+      "width": 15,
+      "height": 17
+    }
+  ]
+}

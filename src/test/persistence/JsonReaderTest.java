@@ -49,7 +49,7 @@ public class JsonReaderTest {
     @Test
     public void readLevelFile1Test() {
         try {
-            json = JsonReader.readFile("./data/test/testLevel1.json");
+            json = JsonReader.readFile("./data/test/level/testLevel1.json");
         } catch (IOException e) {
             fail("Unexpected IOException caught");
         }
@@ -87,14 +87,14 @@ public class JsonReaderTest {
     @Test
     public void readLevelFile2Test() {
         try {
-            json = JsonReader.readFile("./data/test/testLevel2.json");
+            json = JsonReader.readFile("./data/test/level/experimental/testLevel2.json");
         } catch (IOException e) {
             fail("Unexpected IOException caught");
         }
 
         // object assertions
         assertEquals(2, json.getInt("formatVersion"));
-        assertEquals("test", json.getJSONObject("metadata").getString("namespace"));
+        assertEquals("otherTest", json.getJSONObject("metadata").getString("namespace"));
         assertEquals(-2, json.getJSONObject("metadata").getInt("id"));
         assertEquals(20, json.getFloat("initialFrameRate"));
         assertEquals(1, json.getJSONObject("spawn").getDouble("posX"));

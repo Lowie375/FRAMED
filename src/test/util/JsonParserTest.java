@@ -47,7 +47,7 @@ public class JsonParserTest {
     @Test
     public void jsonToLevelTest() {
         try {
-            json = JsonReader.readFile("./data/test/testLevel1.json");
+            json = JsonReader.readFile("./data/test/level/testLevel1.json");
         } catch (IOException e) {
             fail("Unexpected IOException caught");
         }

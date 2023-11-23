@@ -1,0 +1,83 @@
+{
+  "formatVersion": 2,
+  "metadata": {
+    "namespace": "otherTest",
+    "id": -2
+  },
+  "initialFrameRate": 20,
+  "spawn": {
+    "posX": 1,
+    "posY": 1
+  },
+  "goals": [
+    {
+      "pos": {
+        "posX": 36,
+        "posY": 18
+      },
+      "height": 2,
+      "width": 2,
+      "nextLevelID": -3
+    }
+  ],
+  "obstacles": [
+    {
+      "pos": {
+        "posX": 5,
+        "posY": 5
+      },
+      "width": 8,
+      "height": 2
+    },
+    {
+      "pos": {
+        "posX": 5,
+        "posY": 7
+      },
+      "width": 2,
+      "height": 10
+    },
+    {
+      "pos": {
+        "posX": 15,
+        "posY": 13
+      },
+      "width": 4,
+      "height": 4
+    },
+    {
+      "pos": {
+        "posX": 11,
+        "posY": 16
+      },
+      "width": 4,
+      "height": 1
+    }
+  ],
+  "walls": [
+    {
+      "pos": {
+        "posX": 7,
+        "posY": 7
+      },
+      "width": 6,
+      "height": 2
+    },
+    {
+      "pos": {
+        "posX": 24,
+        "posY": 0
+      },
+      "width": 3,
+      "height": 10
+    },
+    {
+      "pos": {
+        "posX": 27,
+        "posY": 9
+      },
+      "width": 12,
+      "height": 1
+    }
+  ]
+}
